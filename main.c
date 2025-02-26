@@ -155,6 +155,7 @@ int	builtin_cd(t_pipeline pipeline, char **av)
 int	run_pipeline(t_pipeline pipeline, char **av, char **env)
 {
 	int	i;
+	int	nb_cmd = 0;
 	bool last;
 	t_command cmd;
 
@@ -164,12 +165,18 @@ int	run_pipeline(t_pipeline pipeline, char **av, char **env)
 	while (i < pipeline.end)
 	{
 		cmd = get_next_command(av, i, pipeline.end);
+		nb_cmd++;
 		last = (cmd.end == pipeline.end);
 		if(!fork_and_execute(&cmd, av, env, last))
 			exit(3);
 		i = cmd.end + 1;
 	}
 	waitpid(cmd.pid, &cmd.exit_status, 0);
+	while (nb_cmd - 1 > 0)
+	{
+		waitpid(-1, NULL, 0);
+		nb_cmd--;
+	}
 	return (WEXITSTATUS(cmd.exit_status));
 }
 
